@@ -862,6 +862,20 @@ class Html extends PHPExcel_Reader_HTML {
      */
     protected function parseRowSpan($sheet, $column, $row, $spanHeight, $attributes)
     {
+        $colspan = 1;
+        foreach ( $attributes as $attribute ) {
+            if ( $attribute->name == 'colspan' ) {
+                $colspan = $attribute->value;
+            }
+        }
+        $endColumn = $column;
+        $endColumnNumber = PHPExcel_Cell::columnIndexFromString($endColumn);
+
+        if ( $colspan ) {
+            $endColumnNumber += ($colspan - 1);
+        }
+        $endColumn = PHPExcel_Cell::stringFromColumnIndex($endColumnNumber - 1);
+
         // Set the span height
         $this->spanHeight = --$spanHeight;
 
@@ -869,7 +883,7 @@ class Html extends PHPExcel_Reader_HTML {
         $startCell = $column . $row;
 
         // Set endcell = current row number + spanheight
-        $endCell = $column . ($row + $this->spanHeight);
+        $endCell = $endColumn . ($row + $this->spanHeight);
         $range = $startCell . ':' . $endCell;
 
         // Remember css inline styles
