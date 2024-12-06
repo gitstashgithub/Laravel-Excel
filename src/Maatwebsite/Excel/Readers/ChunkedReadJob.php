@@ -5,7 +5,7 @@ namespace Maatwebsite\Excel\Readers;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Maatwebsite\Excel\Filters\ChunkReadFilter;
-use SuperClosure\Serializer;
+use Opis\Closure\SerializableClosure;
 
 class ChunkedReadJob implements ShouldQueue
 {
@@ -77,8 +77,8 @@ class ChunkedReadJob implements ShouldQueue
         $this->chunkSize  = $chunkSize;
         $this->startIndex = $startIndex;
         $this->file       = $file;
-
-        $this->callback    = $shouldQueue ? (new Serializer)->serialize($callback) : $callback;
+        $wrapper = new SerializableClosure($callback);
+        $this->callback    = $shouldQueue ? serialize($wrapper) : $callback;
         $this->sheets      = $sheets;
         $this->shouldQueue = $shouldQueue;
         $this->encoding    = $encoding;
@@ -112,7 +112,7 @@ class ChunkedReadJob implements ShouldQueue
         // Slice the results
         $results = $reader->limitRows($this->chunkSize, $this->startIndex)->get();
 
-        $callback = $this->shouldQueue ? (new Serializer)->unserialize($this->callback) : $this->callback;
+        $callback = $this->shouldQueue ? unserialize($this->callback) : $this->callback;
 
         // Do a callback
         if (is_callable($callback)) {
